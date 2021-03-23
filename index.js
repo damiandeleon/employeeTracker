@@ -232,6 +232,4 @@ const viewEmployees = () => {
     });
 }
 
-`SELECT employee.id, employee.first_name, employee.last_name, `
-
-
+// `SELECT employee.id, employee.first_name, employee.last_name, role.title, department.name FROM employee INNER JOIN role ON (employee.role_id = role.id) WHERE employee.role_id = ? AND role.id = ?) ORDER BY employee.id`;
