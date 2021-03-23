@@ -1,5 +1,21 @@
 const mysql = require('mysql');
 const inquirer = require('inquirer');
+const cTable = require('console.table');
+
+const connection = mysql.createConnection({
+  host: 'localhost',
+  port: 3306,
+  user: 'root',
+
+  // Your password
+  password: 'Wilphil01!',
+  database: 'employees',
+});
+
+connection.connect((err) => {
+  if (err) throw err;
+  start();
+});
 
 //function which makes the first prompts
 const start = () => {
@@ -20,7 +36,7 @@ const start = () => {
                 } else if (answer.firstQuestion === 'update employee role') {
                 updateEmployeeRole();
                 } else if (answer.firstQuestion === 'EXIT'){
-                // connection.end();
+                connection.end();
                 }
         });
 };
@@ -49,7 +65,7 @@ const addSomething = () => {
                 case 'EXIT':
                     connection.end();
                 default:
-                    // connection.end();
+                    connection.end();
             }
         }))
 };
@@ -65,7 +81,7 @@ const viewSomething = () => {
             }
         ])
         .then(answer => {
-            switch (answer) {
+            switch (answer.viewChoice) {
                 case 'View Departments':
                     viewDepartments()
                     break;
@@ -76,9 +92,9 @@ const viewSomething = () => {
                     viewEmployees()
                     break;
                 case 'EXIT':
-                    // connection.end();
+                    connection.end();
                 default:
-                    // connection.end();
+                    connection.end();
             }
         })
 };
@@ -169,24 +185,50 @@ const newEmployee = () => {
 };
 
 
-const viewDepartments = () => {
-// create a function that will allow you to view deaprtments using "SELECT * FROM top5000;" after you've downloaded the list of employees.
-};
+function viewDepartments() {
+    // create a function that will allow you to view deaprtments using "SELECT * FROM top5000;" after you've downloaded the list of employees.
+    const query = 'SELECT id, name FROM department';
+    connection.query(query, (err, res) => {
+        if (err)
+            throw err;
+        res.forEach(({ id, name}) => {
+            console.log(
+                `Department ID: ${id} || Department Name: ${name}`
+            );
+        });
+        start();
+    });
+
+}
 
 
 const viewRoles = () => {
 // create a function that will allow the user to view 
+const query = 'SELECT id, title, salary, department_id FROM role';
+connection.query(query, (err, res) => {
+    if (err)
+        throw err;
+    res.forEach(({ id, title, salary, department_id}) => {
+        console.log(
+            `Role ID: ${id} || Title: ${title} || Salary: ${salary} || Department ID: ${department_id}`
+        );
+    });
+    start();
+});
 }
 
-
-
-
-
-
-
-
-start();
-
-
+const viewEmployees = () => {
+        const query = 'SELECT id, first_name, last_name, role_id, manager_id FROM employee';
+    connection.query(query, (err, res) => {
+        if (err)
+            throw err;
+        res.forEach(({ id, first_name, last_name, role_id, manager_id }) => {
+            console.log(
+                `Employee ID: ${id} || Name: ${first_name} ${last_name} || Role: ${role_id} || Manager ID: ${manager_id}`
+            );
+        });
+        start();
+    });
+}
 
 
