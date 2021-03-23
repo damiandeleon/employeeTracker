@@ -1,14 +1,15 @@
 const mysql = require('mysql');
 const inquirer = require('inquirer');
 const cTable = require('console.table');
+require('dotenv').config()
 
 const connection = mysql.createConnection({
   host: 'localhost',
   port: 3306,
-  user: 'root',
+  user: process.env.DB_USER,
 
   // Your password
-  password: 'Wilphil01!',
+  password: process.env.DB_PASS,
   database: 'employees',
 });
 
@@ -230,5 +231,7 @@ const viewEmployees = () => {
         start();
     });
 }
+
+`SELECT employee.id, employee.first_name, employee.last_name, `
 
 
