@@ -65,6 +65,7 @@ const addSomething = () => {
                     break;
                 case 'EXIT':
                     connection.end();
+                    break;
                 default:
                     connection.end();
             }
@@ -78,22 +79,23 @@ const viewSomething = () => {
                 type: 'list',
                 message: "What would yuou like to view?",
                 name: 'viewChoice',
-                choices: ['View Departments', 'View Roles', 'View Employees', 'EXIT'],
+                choices: ['View Employees by Departments', 'View Employees by Roles', 'View All Employees', 'EXIT'],
             }
         ])
         .then(answer => {
             switch (answer.viewChoice) {
-                case 'View Departments':
+                case 'View Employees by Departments':
                     viewDepartments()
                     break;
-                case 'View Roles':
+                case 'View Employees by Roles':
                     viewRoles()
                     break;
-                case 'View Employees':
+                case 'View All Employees':
                     viewEmployees()
                     break;
                 case 'EXIT':
                     connection.end();
+                    break;
                 default:
                     connection.end();
             }
@@ -117,40 +119,25 @@ function viewDepartments() {
     });
 }
 
-function viewAvailDepartments() {
-    // create a function that will allow you to view deaprtments
-    const query = `SELECT department.name AS department, department.id
-    FROM department
-    ORDER BY department.id;`;
+
+
+const viewRoles = () => {
+    // create a function that will allow the user to view 
+    const query = `SELECT role.title, employee.id as EID, employee.first_name, employee.last_name, department.name AS department
+    FROM employee
+    LEFT JOIN role ON (role.id = employee.role_id)
+    LEFT JOIN department ON (department.id = role.department_id)
+    ORDER BY role.title;`;
     connection.query(query, (err, res) => {
         if (err) throw err;
         console.log('\n');
-        console.log('\n');
-        console.log('\n');
-        console.log('FOR REFERENCE:  ACTIVE DEPARTMENTS.');
+        console.log('VIEW EMPLOYEE BY ROLE');
         console.log('\n');
         console.table(res);
-        console.log('\n');
-        console.log('Press down arrow to continue')
+        start();
     });
 }
 
-const viewRoles = () => {
-// create a function that will allow the user to view 
-const query = `SELECT role.title, employee.id as EID, employee.first_name, employee.last_name, department.name AS department
-FROM employee
-LEFT JOIN role ON (role.id = employee.role_id)
-LEFT JOIN department ON (department.id = role.department_id)
-ORDER BY role.title;`;
-connection.query(query, (err, res) => {
-    if (err) throw err;
-    console.log('\n');
-    console.log('VIEW EMPLOYEE BY ROLE');
-    console.log('\n');
-    console.table(res);
-    start();
-});
-}
 
 const viewEmployees = () => {
     const query = `SELECT employee.id, employee.first_name, employee.last_name, role.title, department.name AS department, role.salary, CONCAT(manager.first_name, ' ', manager.last_name) AS manager
@@ -183,14 +170,6 @@ const updateEmployeeRole = () => {
 
 
 function newDepartment () {
-//create newDepartment() function to add a new department with 
-//  **id** - INT PRIMARY KEY 
-//  **name** - VARCHAR(30) to hold department name
-
-//  ***** EXAMPLE ******
-//  INSERT INTO department (id, name)
-//  VALUES ("", TRUE, "Rockington", 100);
-
     inquirer
             .prompt([
                 {
@@ -203,7 +182,7 @@ function newDepartment () {
             .then((answer) => {
                 let deptName = answer.departmentName;
                 console.log(JSON.stringify(deptName));
-                const query = `INSERT INTO department (name) VALUES(${JSON.stringify(deptName)}),();`;
+                const query = `INSERT INTO department (name) VALUES(${JSON.stringify(deptName)});`;
                 connection.query(query, (err, res) => {
                     if (err) throw err;
                     console.log(`Success!  ${deptName} has been added to the department list.`);
@@ -213,7 +192,23 @@ function newDepartment () {
             });
 };
 
-
+function viewAvailDepartments() {
+    // create a function that will allow you to view deaprtments
+    const query = `SELECT department.name AS department, department.id
+    FROM department
+    ORDER BY department.id;`;
+    connection.query(query, (err, res) => {
+        if (err) throw err;
+        console.log('\n');
+        console.log('\n');
+        console.log('\n');
+        console.log('FOR REFERENCE:  ACTIVE DEPARTMENTS.');
+        console.log('\n');
+        console.table(res);
+        console.log('\n');
+        console.log('Press down arrow to continue')
+    });
+}
 
 const newRole = () => {
 viewAvailDepartments();
@@ -251,8 +246,23 @@ viewAvailDepartments();
     });
 };
 
-const viewOrg = () => {
-    const query = `SELECT role.id AS role_id, role.title, department.name AS department, role.salary, CONCAT(manager.id, '       ', manager.first_name, ' ', manager.last_name) AS mgrID___manager
+const viewAvailRoles = () => {
+    const query = `SELECT role.id AS role_id, role.title
+    FROM role
+    ORDER BY role.id;`;
+    connection.query(query, (err, res) => {
+        if (err) throw err;
+        console.log('\n');
+        console.log('\n');
+        console.log('\n');
+        console.log('\n');
+        console.log('FOR REFERENCE:  CURRENT ORG');
+        console.table(res);
+
+    });
+}
+const viewManagers = () => {
+    const query = `SELECT employee.id as ManagerID, CONCAT(employee.first_name, ' ', employee.last_name) AS manager, role.title, department.name AS department
     FROM employee
     LEFT JOIN employee manager ON manager.id = employee.manager_id
     INNER JOIN role ON (role.id = employee.role_id)
@@ -260,9 +270,6 @@ const viewOrg = () => {
     ORDER BY employee.id;`;
     connection.query(query, (err, res) => {
         if (err) throw err;
-        console.log('\n');
-        console.log('FOR REFERENCE:  CURRENT ORG');
-        console.log('\n');
         console.table(res);
         console.log('\n');
         console.log('Press down arrow to continue')
@@ -270,8 +277,8 @@ const viewOrg = () => {
 }
 
 const newEmployee = () => {
-    viewOrg();
-
+    viewAvailRoles();
+    viewManagers();
     inquirer
     .prompt([
         {
