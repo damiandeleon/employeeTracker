@@ -125,6 +125,8 @@ function viewAvailDepartments() {
     connection.query(query, (err, res) => {
         if (err) throw err;
         console.log('\n');
+        console.log('\n');
+        console.log('\n');
         console.log('FOR REFERENCE:  ACTIVE DEPARTMENTS.');
         console.log('\n');
         console.table(res);
@@ -268,11 +270,6 @@ const viewOrg = () => {
 }
 
 const newEmployee = () => {
-//  create newEmployee() function to add a new employee with
-//  **first_name** - VARCHAR(30) to hold employee first name
-//  **last_name** - VARCHAR(30) to hold employee last name
-//  **role_id** - INT to hold reference to role employee has
-//  **manager_id** - INT to hold reference to another employee that manages the employee being Created. This field may be null if the employee has no manager
     viewOrg();
 
     inquirer
@@ -300,17 +297,18 @@ const newEmployee = () => {
     ])
 .then((answer) => {
     console.log("Thanks!")
-    // let roleName = answer.roleName;
-    // let roleSalary = answer.roleSalary;
-    // let roleDepartment = answer.roleDepartment;
+    let roleID = answer.roleID;
+    let managerID = answer.managerID;
+    let empFName = answer.empFName;
+    let empLName = answer.empLName;
 
-    // const query = `INSERT INTO role (title, salary, department_id) VALUES(${JSON.stringify(roleName)}, ${JSON.stringify(roleSalary)}, ${JSON.stringify(roleDepartment)});`;
-    // connection.query(query, (err, res) => {
-    //     if (err) throw err;
-    // //     console.log(`Success!  ${roleName} has been added to the department list.`);
+    const query = `INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES(${JSON.stringify(empFName)}, ${JSON.stringify(empLName)}, ${JSON.stringify(roleID)}, ${JSON.stringify(managerID)});`;
+    connection.query(query, (err, res) => {
+        if (err) throw err;
+        console.log(`Success!  ${empFName} ${empLName} has been added to the employee list.`);
 
-    //     start();
-    // });
+        start();
+    });
 });
 };
 
