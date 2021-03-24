@@ -125,6 +125,8 @@ function viewAvailDepartments() {
     connection.query(query, (err, res) => {
         if (err) throw err;
         console.log('\n');
+        console.log('\n');
+        console.log('When ready to answer, press the down arrow button');
         console.log('ACTIVE DEPARTMENTS. Refer to this list when choosing to answer the next question');
         console.log('\n');
         console.table(res);
@@ -199,7 +201,7 @@ function newDepartment () {
             .then((answer) => {
                 let deptName = answer.departmentName;
                 console.log(JSON.stringify(deptName));
-                const query = `INSERT INTO department (name) VALUES(${JSON.stringify(deptName)});`;
+                const query = `INSERT INTO department (name) VALUES(${JSON.stringify(deptName)}),();`;
                 connection.query(query, (err, res) => {
                     if (err) throw err;
                     console.log(`Success!  ${deptName} has been added to the department list.`);
@@ -212,19 +214,14 @@ function newDepartment () {
 
 
 const newRole = () => {
-// create newRole() function to add a new employee role with
-//  **id** - INT PRIMARY KEY
-//  **title** -  VARCHAR(30) to hold role title
-//  **salary** -  DECIMAL to hold role salary
-//  **department_id** -  INT to hold reference to department role belongs to
+viewAvailDepartments();
 
-    viewAvailDepartments();
     inquirer
     .prompt([
         {
             type: 'input',
-            message: "From the department list above, enter the id of the department the new role will report to.",
-            name: 'roldDepartment',
+            message: `Which department ID (number value) will the new role belong to?`,
+            name: 'roleDepartment',
         },
         {
             type: 'input',
@@ -241,8 +238,14 @@ const newRole = () => {
         let roleName = answer.roleName;
         let roleSalary = answer.roleSalary;
         let roleDepartment = answer.roleDepartment;
-        console.log(roleName, roleSalary, roleDepartment);
-        // ---- NewDeptName to be sent to the database;
+
+        const query = `INSERT INTO role (title, salary, department_id) VALUES(${JSON.stringify(roleName)}, ${JSON.stringify(roleSalary)}, ${JSON.stringify(roleDepartment)});`;
+        connection.query(query, (err, res) => {
+            if (err) throw err;
+            console.log(`Success!  ${roleName} has been added to the department list.`);
+
+            start();
+        });
     });
 };
 
