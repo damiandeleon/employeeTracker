@@ -1,6 +1,6 @@
 const mysql = require('mysql');
 const inquirer = require('inquirer');
-const cTable = require('console.table');
+require('console.table');
 require('dotenv').config()
 
 const connection = mysql.createConnection({
@@ -100,6 +100,71 @@ const viewSomething = () => {
         })
 };
 
+function viewDepartments() {
+    // create a function that will allow you to view deaprtments
+    const query = `SELECT department.name AS department, role.title, employee.id, employee.first_name, employee.last_name
+    FROM employee
+    LEFT JOIN role ON (role.id = employee.role_id)
+    LEFT JOIN department ON (department.id = role.department_id)
+    ORDER BY department.name;`;
+    connection.query(query, (err, res) => {
+        if (err) throw err;
+        console.log('\n');
+        console.log('VIEW EMPLOYEE BY DEPARTMENT');
+        console.log('\n');
+        console.table(res);
+        start();
+    });
+}
+
+function viewAvailDepartments() {
+    // create a function that will allow you to view deaprtments
+    const query = `SELECT department.name AS department, department.id
+    FROM department
+    ORDER BY department.id;`;
+    connection.query(query, (err, res) => {
+        if (err) throw err;
+        console.log('\n');
+        console.log('ACTIVE DEPARTMENTS. Refer to this list when choosing to answer the next question');
+        console.log('\n');
+        console.table(res);
+    });
+}
+
+const viewRoles = () => {
+// create a function that will allow the user to view 
+const query = `SELECT role.title, employee.id as EID, employee.first_name, employee.last_name, department.name AS department
+FROM employee
+LEFT JOIN role ON (role.id = employee.role_id)
+LEFT JOIN department ON (department.id = role.department_id)
+ORDER BY role.title;`;
+connection.query(query, (err, res) => {
+    if (err) throw err;
+    console.log('\n');
+    console.log('VIEW EMPLOYEE BY ROLE');
+    console.log('\n');
+    console.table(res);
+    start();
+});
+}
+
+const viewEmployees = () => {
+    const query = `SELECT employee.id, employee.first_name, employee.last_name, role.title, department.name AS department, role.salary, CONCAT(manager.first_name, ' ', manager.last_name) AS manager
+    FROM employee
+    LEFT JOIN employee manager ON manager.id = employee.manager_id
+    INNER JOIN role ON (role.id = employee.role_id)
+    INNER JOIN department ON (department.id = role.department_id)
+    ORDER BY employee.id;`;
+    connection.query(query, (err, res) => {
+        if (err) throw err;
+        console.log('\n');
+        console.log('VIEW ALL EMPLOYEES');
+        console.log('\n');
+        console.table(res);
+        start();
+    });
+}
+
 const updateEmployeeRole = () => {
     // this is the code to update an employee role
  
@@ -126,21 +191,21 @@ function newDepartment () {
             .prompt([
                 {
                     type: 'input',
-                    message: "What department ID would you like to assign to your new dapartment?",
-                    name: 'departmentId',
-                },
-                {
-                    type: 'input',
                     message: "What would you like to name your new department?",
                     name: 'departmentName',
                 },
                 
             ])
             .then((answer) => {
-                NewDeptId = answer.departmentId;
-                NewDeptName = answer.departmentName;
-                console.log(NewDeptId, NewDeptName)
-                // ---- NewDeptName to be sent to the database;
+                let deptName = answer.departmentName;
+                console.log(JSON.stringify(deptName));
+                const query = `INSERT INTO department (name) VALUES(${JSON.stringify(deptName)});`;
+                connection.query(query, (err, res) => {
+                    if (err) throw err;
+                    console.log(`Success!  ${deptName} has been added to the department list.`);
+
+                    start();
+                });
             });
 };
 
@@ -153,27 +218,32 @@ const newRole = () => {
 //  **salary** -  DECIMAL to hold role salary
 //  **department_id** -  INT to hold reference to department role belongs to
 
+    viewAvailDepartments();
     inquirer
     .prompt([
         {
             type: 'input',
-            message: "What department ID would you like to assign to your new dapartment?",
-            name: 'departmentId',
+            message: "From the department list above, enter the id of the department the new role will report to.",
+            name: 'roldDepartment',
         },
         {
             type: 'input',
-            message: "What would you like to name your new department?",
-            name: 'departmentName',
+            message: "What would you like to name your new role?",
+            name: 'roleName',
         },
-        
+        {
+            type: 'input',
+            message: "What is the new role's salary?",
+            name: 'roleSalary',
+        },
     ])
     .then((answer) => {
-        NewDeptId = answer.departmentId;
-        NewDeptName = answer.departmentName;
-        console.log(NewDeptId, NewDeptName)
+        let roleName = answer.roleName;
+        let roleSalary = answer.roleSalary;
+        let roleDepartment = answer.roleDepartment;
+        console.log(roleName, roleSalary, roleDepartment);
         // ---- NewDeptName to be sent to the database;
     });
-
 };
 
 const newEmployee = () => {
@@ -186,50 +256,10 @@ const newEmployee = () => {
 };
 
 
-function viewDepartments() {
-    // create a function that will allow you to view deaprtments using "SELECT * FROM top5000;" after you've downloaded the list of employees.
-    const query = 'SELECT id, name FROM department';
-    connection.query(query, (err, res) => {
-        if (err)
-            throw err;
-        res.forEach(({ id, name}) => {
-            console.log(
-                `Department ID: ${id} || Department Name: ${name}`
-            );
-        });
-        start();
-    });
 
-}
-
-
-const viewRoles = () => {
-// create a function that will allow the user to view 
-const query = 'SELECT id, title, salary, department_id FROM role';
-connection.query(query, (err, res) => {
-    if (err)
-        throw err;
-    res.forEach(({ id, title, salary, department_id}) => {
-        console.log(
-            `Role ID: ${id} || Title: ${title} || Salary: ${salary} || Department ID: ${department_id}`
-        );
-    });
-    start();
-});
-}
-
-const viewEmployees = () => {
-        const query = 'SELECT id, first_name, last_name, role_id, manager_id FROM employee';
-    connection.query(query, (err, res) => {
-        if (err)
-            throw err;
-        res.forEach(({ id, first_name, last_name, role_id, manager_id }) => {
-            console.log(
-                `Employee ID: ${id} || Name: ${first_name} ${last_name} || Role: ${role_id} || Manager ID: ${manager_id}`
-            );
-        });
-        start();
-    });
-}
 
 // `SELECT employee.id, employee.first_name, employee.last_name, role.title, department.name FROM employee INNER JOIN role ON (employee.role_id = role.id) WHERE employee.role_id = ? AND role.id = ?) ORDER BY employee.id`;
+
+// SELECT employee.id, employee.first_name, employee.last_name, department.name
+// FROM employee
+// INNER JOIN department ON employee.role_id = role.title;

@@ -5,7 +5,7 @@ INSERT INTO department
 VALUES 
     ('Operations'),
     ('Science'),
-    ('Engineering')
+    ('Engineering'),
     ('Medical');
 
 
@@ -18,7 +18,7 @@ VALUES
     ('Chief Engineer', 100000, 3),
     ('Junior Engineer', 80000, 3),
     ('Chief Medical Officer', 125000, 4),
-    ('Nurse' 90000, 4),
+    ('Nurse', 90000, 4),
     ('Junior Officer 1', 50000, 1),
     ('Ship Counselor', 70000, 1),
     ('Chief Security Officer', 100000, 1);
