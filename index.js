@@ -125,11 +125,11 @@ function viewAvailDepartments() {
     connection.query(query, (err, res) => {
         if (err) throw err;
         console.log('\n');
-        console.log('\n');
-        console.log('When ready to answer, press the down arrow button');
-        console.log('ACTIVE DEPARTMENTS. Refer to this list when choosing to answer the next question');
+        console.log('FOR REFERENCE:  ACTIVE DEPARTMENTS.');
         console.log('\n');
         console.table(res);
+        console.log('\n');
+        console.log('Press down arrow to continue')
     });
 }
 
@@ -249,13 +249,69 @@ viewAvailDepartments();
     });
 };
 
+const viewOrg = () => {
+    const query = `SELECT role.id AS role_id, role.title, department.name AS department, role.salary, CONCAT(manager.id, '       ', manager.first_name, ' ', manager.last_name) AS mgrID___manager
+    FROM employee
+    LEFT JOIN employee manager ON manager.id = employee.manager_id
+    INNER JOIN role ON (role.id = employee.role_id)
+    INNER JOIN department ON (department.id = role.department_id)
+    ORDER BY employee.id;`;
+    connection.query(query, (err, res) => {
+        if (err) throw err;
+        console.log('\n');
+        console.log('FOR REFERENCE:  CURRENT ORG');
+        console.log('\n');
+        console.table(res);
+        console.log('\n');
+        console.log('Press down arrow to continue')
+    });
+}
+
 const newEmployee = () => {
 //  create newEmployee() function to add a new employee with
-//  **id** - INT PRIMARY KEY
 //  **first_name** - VARCHAR(30) to hold employee first name
 //  **last_name** - VARCHAR(30) to hold employee last name
 //  **role_id** - INT to hold reference to role employee has
 //  **manager_id** - INT to hold reference to another employee that manages the employee being Created. This field may be null if the employee has no manager
+    viewOrg();
+
+    inquirer
+    .prompt([
+        {
+            type: 'input',
+            message: "What role ID will the employee be assigned?",
+            name: 'roleID',
+        },
+        {
+            type: 'input',
+            message: "Which maanger ID will the employee report to?",
+            name: 'managerID',
+        },
+        {
+            type: 'input',
+            message: `What is the employee's first name?`,
+            name: 'empFName',
+        },
+        {
+            type: 'input',
+            message: "What is the employee's last name?",
+            name: 'empLName',
+        },
+    ])
+.then((answer) => {
+    console.log("Thanks!")
+    // let roleName = answer.roleName;
+    // let roleSalary = answer.roleSalary;
+    // let roleDepartment = answer.roleDepartment;
+
+    // const query = `INSERT INTO role (title, salary, department_id) VALUES(${JSON.stringify(roleName)}, ${JSON.stringify(roleSalary)}, ${JSON.stringify(roleDepartment)});`;
+    // connection.query(query, (err, res) => {
+    //     if (err) throw err;
+    // //     console.log(`Success!  ${roleName} has been added to the department list.`);
+
+    //     start();
+    // });
+});
 };
 
 
