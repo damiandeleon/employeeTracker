@@ -4,18 +4,18 @@ require('console.table');
 require('dotenv').config()
 
 const connection = mysql.createConnection({
-  host: 'localhost',
-  port: 3306,
-  user: process.env.DB_USER,
+    host: 'localhost',
+    port: 3306,
+    user: process.env.DB_USER,
 
-  // Your password
-  password: process.env.DB_PASS,
-  database: 'employees',
+    // Your password
+    password: process.env.DB_PASS,
+    database: 'employees',
 });
 
 connection.connect((err) => {
-  if (err) throw err;
-  start();
+    if (err) throw err;
+    start();
 });
 
 //function which makes the first prompts
@@ -32,13 +32,13 @@ const start = () => {
         .then((answer) => {
             if (answer.firstQuestion === 'add') {
                 addSomething();
-                } else if (answer.firstQuestion ==='view'){
+            } else if (answer.firstQuestion === 'view') {
                 viewSomething();
-                } else if (answer.firstQuestion === 'update employee role') {
+            } else if (answer.firstQuestion === 'update employee role') {
                 updateEmployeeRole();
-                } else if (answer.firstQuestion === 'EXIT'){
+            } else if (answer.firstQuestion === 'EXIT') {
                 connection.end();
-                }
+            }
         });
 };
 
@@ -157,39 +157,72 @@ const viewEmployees = () => {
 }
 
 const updateEmployeeRole = () => {
-    // this is the code to update an employee role
- 
-    // ***** EXAMPLE *****
-    // -- Updates the row where the column name is peter --
-    //  UPDATE people
-    //  SET has_pet = true, pet_name = "Franklin", pet_age = 2
-    //  WHERE name = "Peter";
+    const query = `SELECT employee.id, CONCAT (employee.first_name, " ", employee.last_name) AS full_name, role.title, department.name AS department, role.salary, CONCAT(manager.first_name, ' ', manager.last_name) AS manager
+        FROM employee
+        LEFT JOIN employee manager ON manager.id = employee.manager_id
+        INNER JOIN role ON (role.id = employee.role_id)
+        INNER JOIN department ON (department.id = role.department_id)
+        ORDER BY employee.id;`
+    connection.query(query, (err, results) => {
+        if (err) throw err;
+
+        inquirer.prompt([
+            {
+                name: 'empl',
+                type: 'list',
+                choices: function () {
+                    let choiceArray = results.map(choice => choice.full_name);
+                    return choiceArray;
+                },
+                message: 'Select an employee to update their role:'
+            },
+            {
+                name: 'newRole',
+                type: 'list',
+                choices: function () {
+                    let choiceArray = results.map(choice => choice.title);
+                    return choiceArray;
+                }
+            }
+        ]).then((answer) => {
+            connection.query(`UPDATE employee 
+                SET role_id = (SELECT id FROM role WHERE title = ? ) 
+                WHERE id = (SELECT id FROM(SELECT id FROM employee WHERE CONCAT(employee.first_name," ",employee.last_name) = ?) AS tmptable)`, [answer.newRole, answer.empl], (err, results) => {
+                if (err) throw err;
+                console.log(`Success!  ${answer.empl} has been successfully updated to the new role of ${answer.newRole}! `)
+                start();
+            })
+        })
+
+
+    })
+
 };
 
 
 
 
-function newDepartment () {
+function newDepartment() {
     inquirer
-            .prompt([
-                {
-                    type: 'input',
-                    message: "What would you like to name your new department?",
-                    name: 'departmentName',
-                },
-                
-            ])
-            .then((answer) => {
-                let deptName = answer.departmentName;
-                console.log(JSON.stringify(deptName));
-                const query = `INSERT INTO department (name) VALUES(${JSON.stringify(deptName)});`;
-                connection.query(query, (err, res) => {
-                    if (err) throw err;
-                    console.log(`Success!  ${deptName} has been added to the department list.`);
+        .prompt([
+            {
+                type: 'input',
+                message: "What would you like to name your new department?",
+                name: 'departmentName',
+            },
 
-                    start();
-                });
+        ])
+        .then((answer) => {
+            let deptName = answer.departmentName;
+            console.log(JSON.stringify(deptName));
+            const query = `INSERT INTO department (name) VALUES(${JSON.stringify(deptName)});`;
+            connection.query(query, (err, res) => {
+                if (err) throw err;
+                console.log(`Success!  ${deptName} has been added to the department list.`);
+
+                start();
             });
+        });
 };
 
 function viewAvailDepartments() {
@@ -211,39 +244,39 @@ function viewAvailDepartments() {
 }
 
 const newRole = () => {
-viewAvailDepartments();
+    viewAvailDepartments();
 
     inquirer
-    .prompt([
-        {
-            type: 'input',
-            message: `Which department ID (number value) will the new role belong to?`,
-            name: 'roleDepartment',
-        },
-        {
-            type: 'input',
-            message: "What would you like to name your new role?",
-            name: 'roleName',
-        },
-        {
-            type: 'input',
-            message: "What is the new role's salary?",
-            name: 'roleSalary',
-        },
-    ])
-    .then((answer) => {
-        let roleName = answer.roleName;
-        let roleSalary = answer.roleSalary;
-        let roleDepartment = answer.roleDepartment;
+        .prompt([
+            {
+                type: 'input',
+                message: `Which department ID (number value) will the new role belong to?`,
+                name: 'roleDepartment',
+            },
+            {
+                type: 'input',
+                message: "What would you like to name your new role?",
+                name: 'roleName',
+            },
+            {
+                type: 'input',
+                message: "What is the new role's salary?",
+                name: 'roleSalary',
+            },
+        ])
+        .then((answer) => {
+            let roleName = answer.roleName;
+            let roleSalary = answer.roleSalary;
+            let roleDepartment = answer.roleDepartment;
 
-        const query = `INSERT INTO role (title, salary, department_id) VALUES(${JSON.stringify(roleName)}, ${JSON.stringify(roleSalary)}, ${JSON.stringify(roleDepartment)});`;
-        connection.query(query, (err, res) => {
-            if (err) throw err;
-            console.log(`Success!  ${roleName} has been added to the department list.`);
+            const query = `INSERT INTO role (title, salary, department_id) VALUES(${JSON.stringify(roleName)}, ${JSON.stringify(roleSalary)}, ${JSON.stringify(roleDepartment)});`;
+            connection.query(query, (err, res) => {
+                if (err) throw err;
+                console.log(`Success!  ${roleName} has been added to the department list.`);
 
-            start();
+                start();
+            });
         });
-    });
 };
 
 const viewAvailRoles = () => {
@@ -280,43 +313,43 @@ const newEmployee = () => {
     viewAvailRoles();
     viewManagers();
     inquirer
-    .prompt([
-        {
-            type: 'input',
-            message: "What role ID will the employee be assigned?",
-            name: 'roleID',
-        },
-        {
-            type: 'input',
-            message: "Which maanger ID will the employee report to?",
-            name: 'managerID',
-        },
-        {
-            type: 'input',
-            message: `What is the employee's first name?`,
-            name: 'empFName',
-        },
-        {
-            type: 'input',
-            message: "What is the employee's last name?",
-            name: 'empLName',
-        },
-    ])
-.then((answer) => {
-    console.log("Thanks!")
-    let roleID = answer.roleID;
-    let managerID = answer.managerID;
-    let empFName = answer.empFName;
-    let empLName = answer.empLName;
+        .prompt([
+            {
+                type: 'input',
+                message: "What role ID will the employee be assigned?",
+                name: 'roleID',
+            },
+            {
+                type: 'input',
+                message: "Which maanger ID will the employee report to?",
+                name: 'managerID',
+            },
+            {
+                type: 'input',
+                message: `What is the employee's first name?`,
+                name: 'empFName',
+            },
+            {
+                type: 'input',
+                message: "What is the employee's last name?",
+                name: 'empLName',
+            },
+        ])
+        .then((answer) => {
+            console.log("Thanks!")
+            let roleID = answer.roleID;
+            let managerID = answer.managerID;
+            let empFName = answer.empFName;
+            let empLName = answer.empLName;
 
-    const query = `INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES(${JSON.stringify(empFName)}, ${JSON.stringify(empLName)}, ${JSON.stringify(roleID)}, ${JSON.stringify(managerID)});`;
-    connection.query(query, (err, res) => {
-        if (err) throw err;
-        console.log(`Success!  ${empFName} ${empLName} has been added to the employee list.`);
+            const query = `INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES(${JSON.stringify(empFName)}, ${JSON.stringify(empLName)}, ${JSON.stringify(roleID)}, ${JSON.stringify(managerID)});`;
+            connection.query(query, (err, res) => {
+                if (err) throw err;
+                console.log(`Success!  ${empFName} ${empLName} has been added to the employee list.`);
 
-        start();
-    });
-});
+                start();
+            });
+        });
 };
 
 
